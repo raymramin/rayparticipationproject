@@ -1,0 +1,77 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from io import StringIO
+
+# Function to calculate and display statistics for the dataset
+def display_dataset_stats(data):
+    st.write("Number of rows:", data.shape[0])
+    st.write("Number of columns:", data.shape[1])
+
+    numerical_cols = data.select_dtypes(include=[float, int]).columns
+    categorical_cols = data.select_dtypes(include=[object]).columns
+    bool_cols = data.select_dtypes(include=[bool]).columns
+
+    st.write("Numerical variables:", len(numerical_cols))
+    st.write("Categorical variables:", len(categorical_cols))
+    st.write("Boolean variables:", len(bool_cols))
+
+# Function to display the five number summary for a numerical column
+def display_numerical_summary(data, column):
+    summary = data[column].describe()
+    st.write(summary)
+
+# Function to display the category proportions for a categorical column
+def display_categorical_proportions(data, column):
+    proportions = data[column].value_counts(normalize=True)
+    st.write(proportions)
+
+# Function to generate a customized distribution plot for a numerical column
+def generate_distribution_plot(data, column):
+    plt.figure(figsize=(8, 6))
+    sns.histplot(data=data, x=column, kde=True)
+    plt.title("Distribution Plot")
+    plt.xlabel(column)
+    plt.ylabel("Density")
+    st.pyplot()
+
+# Function to generate a customized bar plot for a categorical column
+def generate_categorical_barplot(data, column):
+    plt.figure(figsize=(8, 6))
+    sns.countplot(data=data, x=column)
+    plt.title("Categorical Bar Plot")
+    plt.xlabel(column)
+    plt.ylabel("Count")
+    plt.xticks(rotation=45)
+    st.pyplot()
+
+# Streamlit application
+def main():
+    st.title("CSV File Uploader and Analyzer")
+
+    # File uploader
+    uploaded_file = st.file_uploader("Upload a CSV file", type="csv")
+
+    if uploaded_file is not None:
+        data = pd.read_csv(uploaded_file)
+
+        # Display dataset statistics
+        st.header("Dataset Statistics")
+        display_dataset_stats(data)
+
+        # Select column
+        selected_column = st.selectbox("Select a column", data.columns)
+
+        # Analyze selected column
+        if data[selected_column].dtype in [float, int]:
+            st.header("Numerical Column Analysis")
+            display_numerical_summary(data, selected_column)
+            generate_distribution_plot(data, selected_column)
+        else:
+            st.header("Categorical Column Analysis")
+            display_categorical_proportions(data, selected_column)
+            generate_categorical_barplot(data, selected_column)
+
+if __name__ == "__main__":
+    main()
